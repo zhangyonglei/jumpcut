@@ -66,6 +66,20 @@
     return [super init];
 }
 
+-(void)statusItemClicked:(NSStatusBarButton *)sender {
+    NSEvent *event = [NSApp currentEvent];
+    const NSUInteger buttonMask = [NSEvent pressedMouseButtons];
+    BOOL leftClick = ((buttonMask & (1 << 0)) != 0);
+    BOOL rightClick = ((buttonMask & (1 << 1)) != 0);
+    if(rightClick || [event modifierFlags] & NSControlKeyMask) {
+        NSLog(@"Altmenu");
+    } else if (leftClick) {
+        self.statusItem.menu = self.statusMenu;
+        [self.statusItem popUpStatusItemMenu:self.statusItem.menu];
+        self.statusItem.menu = nil;
+    }
+}
+
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     self.jcPasteboard = [NSPasteboard generalPasteboard];
     self.isBezelDisplayed = NO;
@@ -83,7 +97,9 @@
         [scissorsImage setTemplate:YES];
         [self.statusItem setImage:scissorsImage];
     }
-    self.statusItem.menu = self.statusMenu;
+    [self.statusItem.button setAction:@selector(statusItemClicked:)];
+    [self.statusItem.button sendActionOn:(NSLeftMouseDownMask|NSRightMouseDownMask|NSLeftMouseUpMask|NSRightMouseUpMask)];
+    
     if ([self.bezel respondsToSelector:@selector(setCollectionBehavior:)]) {
         [self.bezel setCollectionBehavior:NSWindowCollectionBehaviorTransient | NSWindowCollectionBehaviorIgnoresCycle | NSWindowCollectionBehaviorFullScreenAuxiliary | NSWindowCollectionBehaviorMoveToActiveSpace];
     }
@@ -615,10 +631,6 @@ NSString* keyCodeToString(CGKeyCode keyCode) {
 
 -(void)fakeCommandV
 {
-    // We can no longer use a reverse transformer to get this value
-    // programatically, under the 64-bit friendly ShortcutRecorder2,
-    // so we need to hardcode it for now, but this is valid for US
-    // ASCII only and is not a permanent solution.
     CGEventSourceRef sourceRef = CGEventSourceCreate(kCGEventSourceStateCombinedSessionState);
     if (!sourceRef) {
         return;
