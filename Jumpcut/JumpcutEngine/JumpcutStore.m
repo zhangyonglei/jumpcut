@@ -71,6 +71,16 @@
     [self addClipping:clipping ofType:type];
 }
 
+// Remove a single item
+-(BOOL) removeItemAtIndex:(int)index {
+    if ([jcList count] > index) {
+        [jcList removeObjectAtIndex:index];
+        return YES;
+    } else {
+        return NO;
+    }
+}
+
 // Clear remembered and listed
 -(void) clearList {
     NSMutableArray *emptyJCList;

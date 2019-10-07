@@ -70,9 +70,11 @@
     NSEvent *event = [NSApp currentEvent];
     const NSUInteger buttonMask = [NSEvent pressedMouseButtons];
     BOOL leftClick = ((buttonMask & (1 << 0)) != 0);
-    BOOL rightClick = ((buttonMask & (1 << 1)) != 0);
+    BOOL rightClick = !leftClick;
     if(rightClick || [event modifierFlags] & NSControlKeyMask) {
-        NSLog(@"Altmenu");
+        self.statusItem.menu = self.altMenu;
+        [self.statusItem popUpStatusItemMenu:self.statusItem.menu];
+        self.statusItem.menu = nil;
     } else if (leftClick) {
         self.statusItem.menu = self.statusMenu;
         [self.statusItem popUpStatusItemMenu:self.statusItem.menu];
@@ -98,7 +100,11 @@
         [self.statusItem setImage:scissorsImage];
     }
     [self.statusItem.button setAction:@selector(statusItemClicked:)];
-    [self.statusItem.button sendActionOn:(NSLeftMouseDownMask|NSRightMouseDownMask|NSLeftMouseUpMask|NSRightMouseUpMask)];
+    /* This detecting rightmouseup but not rightmousedown is a workaround for a NSStatusItem bug --
+     see https://www.jessesquires.com/blog/workaround-highlight-bug-nsstatusitem/; this behavior makes
+     a right click lag fractionally vs. a left click or a control-click, but prevents the status item
+     from being stuck in highlighted mode until the user clicks it again, which is worse. */
+    [self.statusItem.button sendActionOn:(NSLeftMouseDownMask|NSRightMouseUpMask)];
     
     if ([self.bezel respondsToSelector:@selector(setCollectionBehavior:)]) {
         [self.bezel setCollectionBehavior:NSWindowCollectionBehaviorTransient | NSWindowCollectionBehaviorIgnoresCycle | NSWindowCollectionBehaviorFullScreenAuxiliary | NSWindowCollectionBehaviorMoveToActiveSpace];
@@ -324,9 +330,11 @@ NSString* keyCodeToString(CGKeyCode keyCode) {
     int passedSeparator = 0;
     NSMenuItem *oldItem;
     NSMenuItem *item;
+    NSMenuItem *altItem;
     NSString *pbMenuTitle;
     NSArray *returnedDisplayStrings = [self.clippingStore previousDisplayStrings:(int)[[NSUserDefaults standardUserDefaults] integerForKey:@"displayNum"]];
     NSEnumerator *menuEnumerator = [[self.statusMenu itemArray] reverseObjectEnumerator];
+    NSEnumerator *altMenuEnumerator = [[self.altMenu itemArray] reverseObjectEnumerator];
     NSEnumerator *clipEnumerator = [returnedDisplayStrings reverseObjectEnumerator];
 
     //remove clippings from menu
@@ -337,16 +345,47 @@ NSString* keyCodeToString(CGKeyCode keyCode) {
             [self.statusMenu removeItem:oldItem];
         }
     }
+    while( oldItem = [altMenuEnumerator nextObject] ) {
+        if( [oldItem isSeparatorItem]) {
+            passedSeparator++;
+        } else if ( passedSeparator == 2 ) {
+            [self.altMenu removeItem:oldItem];
+        }
+    }
 
     while( pbMenuTitle = [clipEnumerator nextObject] ) {
         item = [[NSMenuItem alloc] initWithTitle:pbMenuTitle
                                           action:@selector(processMenuClippingSelection:)
                                    keyEquivalent:@""];
         [item setTarget:self];
-        [item setEnabled:YES];
         [self.statusMenu insertItem:item atIndex:0];
+        altItem = [[NSMenuItem alloc] initWithTitle:pbMenuTitle
+                                             action:nil
+                                      keyEquivalent:@""];
+        NSMenu *altSubmenu = [[NSMenu alloc] init];
+        [altSubmenu addItemWithTitle:@"Delete" action:@selector(deleteClipping:) keyEquivalent:@""];
+        [altItem setSubmenu:altSubmenu];
+        [self.altMenu insertItem:altItem atIndex:0];
         // Way back in 0.2, failure to release the new item here was causing a quite atrocious memory leak.
         [item release];
+        [altItem release];
+        [altSubmenu release];
+    }
+}
+
+- (void) deleteClipping:(id)sender
+{
+    NSMenuItem *parent = [sender parentItem];
+    if (parent) {
+        int index=(int)[[parent menu] indexOfItem:parent];
+        if (index) {
+            if ([self.clippingStore removeItemAtIndex:index]) {
+                [self updateMenu];
+                if ( [[NSUserDefaults standardUserDefaults] integerForKey:@"savePreference"] >= 1 ) {
+                    [self saveEngine];
+                }
+            }
+        }
     }
 }
 

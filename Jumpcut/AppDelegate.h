@@ -14,6 +14,7 @@
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 @property (strong, nonatomic) IBOutlet NSMenu *statusMenu;
+@property (strong, nonatomic) IBOutlet NSMenu *altMenu;
 @property (assign) IBOutlet NSWindow *prefsPanel;
 @property (assign) IBOutlet NSSegmentedControl *launchAtLoginButton;
 
