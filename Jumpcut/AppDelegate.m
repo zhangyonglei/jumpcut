@@ -103,7 +103,11 @@
     /* This detecting rightmouseup but not rightmousedown is a workaround for a NSStatusItem bug --
      see https://www.jessesquires.com/blog/workaround-highlight-bug-nsstatusitem/; this behavior makes
      a right click lag fractionally vs. a left click or a control-click, but prevents the status item
-     from being stuck in highlighted mode until the user clicks it again, which is worse. */
+     from being stuck in highlighted mode until the user clicks it again, which is worse.
+     
+     Here's a more elaborate workaround we can eventually implement:
+     https://twitter.com/danmessing/status/1162433469281996800
+     */
     [self.statusItem.button sendActionOn:(NSLeftMouseDownMask|NSRightMouseUpMask)];
     
     if ([self.bezel respondsToSelector:@selector(setCollectionBehavior:)]) {
