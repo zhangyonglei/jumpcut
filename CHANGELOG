@@ -3,6 +3,157 @@
 Jumpcut predates the widespread adoption of semantic versioning; as such,
 pre-1.0 releases are numbered as 0.XX.
 
+## [0.84] - 2023-12-04
+### Fixed
+- Jumpcut now creates an Application Support directory if one is not
+present on launch, fixing a minor bug introduced in 0.83.
+
+## [0.83] - 2023-12-02
+### Rewritten
+- Jumpcut now uses the "LaunchAtLogin" library instead of hand-rolled
+code based on LaunchAtLogin and its predecessors. This should hopefully
+make this feature more reliable across multiple versions of macOS better.
+### Added
+- New options for allowing whitespace-only clippings to be recorded, and to
+push any clippings used to the top of the stack.
+### Fixed
+- The menu bar now activates on mouseDown, rather than mouseUp, events.
+
+## [0.82] - 2022-05-25
+### Added
+- Fully exposed access to the "skipSave" preference through the clippings
+preference pane (with confirmation message when activating skipSave). Changing
+the preference is not permitted if any clippings are on the stack.
+control key was not pressed has been resolved.
+- Double-clicking the icon while Jumpcut is running now opens the Preferences
+window regardless of whether the status bar icon is displayed; this lets users
+get at the preferences even when the icon is hidden by the notch.
+### Fixed
+- A strange regression where the escape key dismissed the bezel only when the
+control key was not pressed has been resolved.
+- Two issues with displaying the bezel in a multi-monitor setup (one where the
+bezel would continue to display where it was first shown, regardless of user
+focus; the other where the bezel would not display correctly if focus was on
+a second monitor at launch) have been resolved.
+
+## [0.81] - 2022-05-05
+### Added
+- An option is now exposed allowing a choice between the bezel following the
+last used clipping as new clippings are added or moving to the top.
+### Fixed
+- The bezel's behavior when entering number keys (displaying the clipping at
+that position, with "0" standing in for 10) is restored for keys other than
+"1".
+- The "remembering" stack size preference is now honored (although only
+checked at startup).
+- Jumpcut no longer crashes when "Clear All" is selected but there are no
+clippings on the stack.
+- We restore the Jumpcut bezel's ability to appear in any space when using
+Spaces.
+- A regression in the behavior of the stack positioning after deleting a
+clipping (moving the position to the bottom of the stack) has been corrected.
+- We've made additional tweaks to the Sauce key detection; this provides
+keyboard-independent mapping for foreign and non-QWERTY keyboard layouts, but
+was being applied inconsistently, leading to some issues with correct response
+to keydown events when the bezel was displayed.
+### Restored
+- Per a user request, we've restored the option to run Jumpcut with in-memory
+clippings *only*. Since this is a good way to lose your data and interacts
+poorly with normal workflows, this is currently not exposed in the preferenes
+window but needs to be set via the `defaults` command-line tool.
+- Per a user request, we've restored the option to use the "white scissors"
+emoji as the status bar icon.
+
+## [0.80] - 2022-04-24
+### Rewritten
+- Jumpcut has been rewritten in Swift 5. As my day job is not writing code for
+Macs (or Apple devices of any kind), my ability to work with Jumpcut's aging
+code base was starting to dwindle; when I hit bugs, workarounds in Stack
+Overflow often presumed use of Swift. This change will hopefully preserve
+Jumpcut as an approachable, maintainable code base (for me and others!) for
+years to come.
+### Changed
+- Target macOS/OS X version is now 10.11 (permanently, this time).
+- New icon by John Kenzie. Thanks, Johnny!
+- Switch to mainline (non-forked) version of ShortcutRecord. 
+- Jumpcut now uses Swift Package Manager instead of vendored libraries for
+Sparkle and ShortcutRecorder.
+- We now use the HotKey, Preference, and Sauce Swift libraries.
+### Fixed
+- Improved support for non-QWERTY keyboards and detection of keyboard layout
+changes via the Sauce library.
+- Improved detection of missing Accessibility access, including alerting on
+startup.
+### Added
+- "Headless" mode, with no display of a menu icon. Double-click the application
+icon to open the preference window (and disable headless mode if so desired).
+- "Additional options" in the menu, currently limited to explicit
+copy-to-pasteboard, paste, and delete.
+- "Toggle" behavior in the menu, switching to whichever of copy-to-pasteboard
+or paste is *not* the current preference.
+- "Reset Preferences" button, restoring factory default preferences (and
+removing the necessity of editing settings in the command line to undo "don't
+warn me again choices).
+- Configurable bezel text alignment.
+
+## [0.75] - 2021-06-30
+### Fixed
+- Altered the check for transient types (and, optionally, concealed
+types) to use a less brittle method that does not require actually
+loading the pasteboard item. (Thanks to GitHub users acca and
+maybeageek for the bug reports.)
+- Target macOS/OS X version has been set back to 10.10 from 10.11.
+### Added
+- The "Clear All" menu item's warning may now be disabled. (Set
+the "askBeforeClearingClippings" preference back to true to
+re-enable it if needed.)
+
+## [0.75] - 2021-06-30
+### Fixed
+- Altered the check for transient types (and, optionally, concealed
+types) to use a less brittle method that does not require actually
+loading the pasteboard item. (Thanks to GitHub users acca and
+maybeageek for the bug reports.)
+- Target macOS/OS X version has been set back to 10.10 from 10.11.
+### Added
+- The "Clear All" menu item's warning may now be disabled. (Set
+the "askBeforeClearingClippings" preference back to true to
+re-enable it if needed.)
+
+## [0.74] - 2021-05-31
+### Added
+- Jumpcut is now a universal binary and will run natively on Intel
+and Apple Silicon Macs.
+
+## [0.73] - 2020-10-10
+### Fixed
+- Improved detection of Jumpcut-created clips to prevent re-adding
+them to the clipping stack. (Thanks to GitHub user Web-Betty for
+the bug report and screencast.)
+### Added
+- Individual clips may now be deleted by pressing the delete key or
+backspace when the clip is displayed in the bezel.
+
+## [0.72] - 2020-02-20
+### Fixed
+- Fixed issue preventing default hotkey (Control-Option-V) from being set
+for first-time users.
+- Jumpcut has updated to use the most recent ShortcutRecorder code
+as of February 2020; while the fork previously in use worked correctly
+on Macs running 10.13 (High Sierra) and later, a crashing bug was
+reported when setting the master hotkey on Sierra (duplicated on El
+Capitan). Using the mainline ShortcutRecorder (v3.1, from October 2019)
+has resolved this issue on El Capitan, where the hotkey may not be set
+normally.
+- keyCodeToString crashed when using Hiragana and Katakana keyboards;
+this code has been made more defensive and should work more robustly for
+non-Roman keyboards. (Update: this change also fixed a similar bug with
+Pinyin keyboards.) Thanks to Darren Gore for the initial bug report and
+assistance with reproduction and testing.
+### Added
+- "Bezel selection pastes" and "menu selection pastes" are once again
+separate items in the general preferences.
+
 ## [0.71] - 2019-09-19
 ### Fixed
 - Display resolution changes now trigger adjustments to bezel size and
